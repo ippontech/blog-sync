@@ -14,7 +14,8 @@ fun main(args: Array<String>) {
     val posts = ghostExportService.getAllPosts()
     val authorsIdToNameMap = ghostExportService.getAuthorsIdToNameMap()
 
-    GhostToGit().process(posts, authorsIdToNameMap, outputDir)
+    val ghostToGit = GhostToGit()
+    ghostToGit.process(posts, authorsIdToNameMap, outputDir)
 }
 
 class GhostToGit {

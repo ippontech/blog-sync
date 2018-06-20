@@ -19,40 +19,9 @@ fun main(args: Array<String>) {
     val bearerToken = args[1]
     val gitToGhost = GitToGhost(bearerToken, repositoryDir)
 
-//    gitToGhost.uploadAllPosts()
+    gitToGhost.uploadAllPosts()
 
-    listOf("plop.md")
-            .forEach { gitToGhost.uploadPost(File("$repositoryDir/posts/$it")) }
-
-//    listOf("10-tips-and-tricks-for-cassandra.md",
-//            "apache-spark-datasets.md",
-//            "apache-spark-mapreduce-rdd-manipulations-keys.md",
-//            "data-meaningfulness-and-usability-does-your-data-mean-what-it-says.md",
-//            "docker-vagrant.md",
-//            "first-coding-dojo-for-ippon-usa.md",
-//            "first-week-ippon.md",
-//            "increasing-the-performance-of-your-web-application.md",
-//            "javaone-day-3-and-4-roundup.md",
-//            "javaone-day-one-round-up.md",
-//            "jhipster-streamlining-the-hackathon-experience.md",
-//            "kafka-spark-and-avro-part-1-kafka-101.md",
-//            "kafka-spark-and-avro-part-3-producing-and-consuming-avro-messages.md",
-//            "kafka-spark-avro-part-2-3-consuming-kafka-messages-spark.md",
-//            "migrating-from-openid-to-oauth-2-0-for-google-login-support.md",
-//            "modeling-data-with-cassandra-what-cql-hides-away-from-you.md",
-//            "nosql-mdm.md",
-//            "owasp-top-10-a10.md",
-//            "owasp-top-10-a7.md",
-//            "owasp-top-10-a8.md",
-//            "owasp-top-10-a9.md",
-//            "reusing-old-algorithms-can-solution-solve.md",
-//            "spark-calling-scala-code-from-pyspark.md",
-//            "stratahadoop-world-2016-new-york-another-perspective.md",
-//            "testing-strategy-apache-spark-jobs.md",
-//            "thought-leadership-at-ippon.md",
-//            "uglifying-angularjs-for-production.md",
-//            "vagrant-manager.md",
-//            "why-address-not-string.md")
+//    listOf("plop.md")
 //            .forEach { gitToGhost.uploadPost(File("$repositoryDir/posts/$it")) }
 }
 
