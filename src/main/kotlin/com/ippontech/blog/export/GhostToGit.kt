@@ -1,87 +1,153 @@
 package com.ippontech.blog.export
 
-import com.ippontech.blog.common.RestTemplateUtils.createHeaders
-import com.ippontech.blog.common.RestTemplateUtils.handleErrors
-import com.ippontech.blog.common.apiUrl
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.ippontech.blog.common.githubImageBaseUrl
 import org.apache.logging.log4j.LogManager
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.web.client.HttpStatusCodeException
-import org.springframework.web.client.RestTemplate
+import java.io.File
 
-class GhostToGit(val bearerToken: String) {
+fun main(args: Array<String>) {
+    val bearerToken = args[0]
+    val outputDir = args[1]
 
-    private val logger = LogManager.getLogger(GhostToGit::class.java)
-    private val restTemplate = RestTemplate()
+    val ghostExportService = GhostExportService(bearerToken)
+    val posts = ghostExportService.getAllPosts()
+    val authorsIdToNameMap = ghostExportService.getAuthorsIdToNameMap()
 
-    fun getPost(postId: String): Post {
-        val headers = createHeaders(bearerToken)
-        headers.add("Content-Type", "application/json; charset=UTF-8")
-        val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/posts/$postId/?status=all"
-        return handleErrors {
-            val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
-            if (res.body.posts.size != 1) {
-                throw Exception("Post id=$postId not found, found ${res.body.posts.size} results")
+    GhostToGit().process(posts, authorsIdToNameMap, outputDir)
+}
+
+class GhostToGit {
+
+    private val logger = LogManager.getLogger(GhostExportService::class.java)
+
+    private val mapper = ObjectMapper().registerModule(KotlinModule())
+
+    private val imageRegex = Regex("!\\[[^\\]]*\\]\\((/content/images/[^)]+)\\)")
+    private val titleRegex = Regex("^(#+)([a-zA-Z])", RegexOption.MULTILINE)
+    private val trailingSpacesRegex = Regex("\\h+$", RegexOption.MULTILINE)
+    private val extraLinesRegex = Regex("(\\n\\n)\\n+", RegexOption.MULTILINE)
+
+    fun process(posts: List<Post>, authorsIdToNameMap: Map<String, String>, outputDir: String) {
+        // read the posts and write them to separate files
+        posts.forEach { writePost(outputDir, it, authorsIdToNameMap) }
+    }
+
+    private fun writePost(outputDir: String, post: Post, authorsIdToNameMap: Map<String, String>) {
+        val outputFile = File("$outputDir/posts/${post.slug}.md")
+        logger.info("Writing file: ${outputFile.canonicalPath}")
+
+        val markdown = extractMarkdown(post)
+
+        // write the file
+        val content = generateContent(post, markdown, authorsIdToNameMap)
+        outputFile.writeText(content)
+
+        // write the
+        if (post.feature_image != null) {
+            writeImage(outputDir, post.feature_image)
+        }
+        imageRegex.findAll(markdown)
+                .forEach { writeImage(outputDir, it.groups[1]!!.value) }
+    }
+
+    private fun generateContent(post: Post, markdown: String, userMapping: Map<String, String>): String {
+        val author = userMapping[post.author]
+
+        val tags = post.tags!!
+                .map { "\n- ${it.name}" }
+                .joinToString(separator = "")
+
+        val date = if (post.status == "published") post.published_at else ""
+
+        val title = post.title.replace("\"", "\\\"")
+
+        val image = if (post.feature_image != null) rewriteImageUrl(post.feature_image) else ""
+
+        val cleanMarkdown = cleanMarkdown(markdown)
+
+        return """---
+authors:
+- $author
+tags:$tags
+date: $date
+title: "$title"
+image: $image
+---
+
+$cleanMarkdown
+"""
+    }
+
+    private fun extractMarkdown(post: Post): String {
+        val mobiledoc = mapper.readValue(post.mobiledoc!!, MobileDoc::class.java)
+        val markdown = mobiledoc.cards[0][1].get("markdown").textValue()!!.trim()
+        return markdown
+    }
+
+    private fun cleanMarkdown(markdown: String): String {
+        // rewrite URLs
+        val md1 = rewriteImageUrls(markdown)
+
+        // cleanup titles with missing spaces
+        val md2 = cleanTitles(md1)
+
+        // remove trailing spaces
+        val md3 = md2.replace(trailingSpacesRegex, "")
+
+        // remove extra blank lines
+        val md4 = md3.replace(extraLinesRegex, "$1")
+
+        return md4
+    }
+
+    private fun cleanTitles(markdown: String): String {
+        var inCode = false
+        val lines = markdown.split('\n')
+        val resLines = mutableListOf<String>()
+        for (line in lines) {
+            if (line.startsWith("```")) {
+                inCode = !inCode
             }
-            res.body.posts.first()
-        }
-    }
-
-    fun findPost(slug: String): Post? {
-        val headers = createHeaders(bearerToken)
-        headers.add("Content-Type", "application/json; charset=UTF-8")
-        val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/posts/slug/$slug/?status=all"
-        try {
-            val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
-            if (res.body.posts.size != 1) {
-                throw Exception("Post slug=$slug not found, found ${res.body.posts.size} results")
+            val resLine = if (!inCode) {
+                line.replace(titleRegex, "$1 $2")
+            } else {
+                line
             }
-            return res.body.posts.first()
-        } catch (e: HttpStatusCodeException) {
-            if (e.statusCode == HttpStatus.NOT_FOUND) {
-                return null
-            }
-            logger.error(e)
-            logger.error(e.responseBodyAsString)
-            throw e
+            resLines.add(resLine)
         }
+        return resLines.joinToString(separator = "\n")
     }
 
-    fun getAuthors(): List<User> {
-        logger.info("Fetching authors from Ghost")
-        val headers = createHeaders(bearerToken)
-        val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/users/?limit=1000"
-        return handleErrors {
-            val res = restTemplate.exchange<Users>(url, HttpMethod.GET, entity, Users::class.java)
-            logger.info("Done fetching authors from Ghost")
-            res.body.users
-        }
+    private fun writeImage(outputDir: String, image: String) {
+//        if (!image.startsWith("/content/images/")) return
+//
+//        val path = image.substringAfter("/content/images/").substringBeforeLast("/")
+//        val name = image.substringAfterLast("/")
+//        val outputPath = File("$outputDir/images/$path")
+//        val outputFile = File("$outputPath/$name")
+//
+//        val url = "http://blog.ippon.tech$image"
+//        logger.info("  Downloading image: $url")
+//
+//        val headers = HttpHeaders()
+//        headers.set("Accept", "*/*")
+//        headers.set("User-Agent", "curl/7.54.0")
+//        val entity = HttpEntity<ByteArray>(headers)
+//        val response = restTemplate.exchange(url, HttpMethod.GET, entity, ByteArray::class.java)
+//        //val bytes = URL("http://blog.ippon.tech$image").readBytes()
+//
+//        logger.info("  Writing image: ${outputFile.canonicalPath}")
+//        outputPath.mkdirs()
+//        outputFile.writeBytes(response.body)
     }
 
-    fun getAuthorsNameToIdMap(): Map<String, String> {
-        val authors = getAuthors()
-        return authors.map { it.name to it.id }.toMap()
-    }
+    // replace in markdown
+    private fun rewriteImageUrls(content: String) =
+            content.replace("(/content/images/", "($githubImageBaseUrl")
 
-    fun getTags(): List<Tag> {
-        logger.info("Fetching tags from Ghost")
-        val headers = createHeaders(bearerToken)
-        val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/tags/?limit=1000"
-        return handleErrors {
-            val res = restTemplate.exchange<Tags>(url, HttpMethod.GET, entity, Tags::class.java)
-            logger.info("Done fetching tags from Ghost")
-            res.body.tags
-        }
-    }
-
-    fun getTagsNameToIdMap(): Map<String, String> {
-        val tags = getTags()
-        return tags.map { it.name to it.id }.toMap()
-    }
-
+    // replace a single URL
+    private fun rewriteImageUrl(url: String) =
+            if (url.startsWith("/content/images/")) url.replace("/content/images/", githubImageBaseUrl)
+            else url
 }

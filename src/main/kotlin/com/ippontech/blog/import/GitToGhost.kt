@@ -5,7 +5,8 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.ippontech.blog.common.RestTemplateUtils.createHeaders
 import com.ippontech.blog.common.RestTemplateUtils.handleErrors
 import com.ippontech.blog.common.apiUrl
-import com.ippontech.blog.export.GhostToGit
+import com.ippontech.blog.common.githubImageBaseUrl
+import com.ippontech.blog.export.GhostExportService
 import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -60,9 +61,9 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
     private val logger = LogManager.getLogger(GitToGhost::class.java)
     private val restTemplate = RestTemplate()
     private val mapper = ObjectMapper().registerModule(KotlinModule())
-    private val ghostToGit = GhostToGit(bearerToken)
-    private val authorsNameToIdMap = ghostToGit.getAuthorsNameToIdMap()
-    private val tagsNameToIdMap = ghostToGit.getTagsNameToIdMap()
+    private val ghostExportService = GhostExportService(bearerToken)
+    private val authorsNameToIdMap = ghostExportService.getAuthorsNameToIdMap()
+    private val tagsNameToIdMap = ghostExportService.getTagsNameToIdMap()
 
     fun uploadAllPosts() {
         File("$postsDir/posts/")
@@ -173,11 +174,11 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
 
         val mobiledoc = createMobileDoc(content)
 
-        val existingPost = ghostToGit.findPost(slug)
+        val existingPost = ghostExportService.findPost(slug)
 
         val featureImage = if (image != null) {
-            assert(image.startsWith("https://raw.githubusercontent.com/ippontech/blog-usa/master/images/"))
-            image.replace("https://raw.githubusercontent.com/ippontech/blog-usa/master/images/", "/content/images/")
+            assert(image.startsWith(githubImageBaseUrl))
+            image.replace(githubImageBaseUrl, "/content/images/")
         } else {
             null
         }
