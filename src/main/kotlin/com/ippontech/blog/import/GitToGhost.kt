@@ -110,7 +110,7 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
                 }
                 when {
                     line == "authors:" -> inAuthors = true
-                    line == "categories:" -> inTags = true
+                    line == "tags:" -> inTags = true
                     line.startsWith("date:") -> date = line.substringAfter("date:").trim()
                     line.startsWith("title:") -> title = line.substringAfter("title:").trim('"', ' ')
                     line.startsWith("image:") -> image = line.substringAfter("image:").trim()
@@ -169,7 +169,7 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
                 title = title,
                 slug = slug,
                 mobiledoc = mobiledoc,
-                status = if (existingPost == null) "draft" else "published",
+                status = if (existingPost == null) "draft" else existingPost.status,
                 created_at = if (date != null && date.isNotEmpty()) date else null,
                 updated_at = existingPost?.updated_at,
                 published_at = existingPost?.published_at,
