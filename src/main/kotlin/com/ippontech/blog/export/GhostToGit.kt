@@ -6,6 +6,8 @@ import com.ippontech.blog.common.apiUrl
 import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 
 class GhostToGit(val bearerToken: String) {
@@ -24,6 +26,27 @@ class GhostToGit(val bearerToken: String) {
                 throw Exception("Post id=$postId not found, found ${res.body.posts.size} results")
             }
             res.body.posts.first()
+        }
+    }
+
+    fun findPost(slug: String): Post? {
+        val headers = createHeaders(bearerToken)
+        headers.add("Content-Type", "application/json; charset=UTF-8")
+        val entity = HttpEntity<String>(headers)
+        val url = "$apiUrl/posts/slug/$slug/?status=all"
+        try {
+            val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
+            if (res.body.posts.size != 1) {
+                throw Exception("Post slug=$slug not found, found ${res.body.posts.size} results")
+            }
+            return res.body.posts.first()
+        } catch (e: HttpStatusCodeException) {
+            if (e.statusCode == HttpStatus.NOT_FOUND) {
+                return null
+            }
+            logger.error(e)
+            logger.error(e.responseBodyAsString)
+            throw e
         }
     }
 

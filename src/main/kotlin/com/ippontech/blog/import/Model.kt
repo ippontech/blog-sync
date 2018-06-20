@@ -1,5 +1,8 @@
 package com.ippontech.blog.import
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+
 //{
 //    "posts": [
 //        {
@@ -24,13 +27,14 @@ package com.ippontech.blog.import
 
 data class GhostPosts(val posts: List<Post>)
 
+@JsonInclude(NON_NULL)
 data class Post(
-        val id: String,
+        val id: String?,
         val title: String,
         val slug: String,
         val status: String,
         val mobiledoc: String,
-        val created_at: String,
+        val created_at: String?,
         val updated_at: String?,
         val published_at: String?,
         val authors: List<Author>,

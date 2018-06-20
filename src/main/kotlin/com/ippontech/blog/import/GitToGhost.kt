@@ -73,18 +73,22 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
 
     fun uploadPost(file: File) {
         logger.info("Processing file: ${file.name}")
-        val model = createModel(file)
+        val post = createModel(file)
 
-        logger.info("Uploading: ${model.slug}")
+        logger.info("Uploading: ${post.slug}")
         val headers = createHeaders(bearerToken)
         headers.add("Content-Type", "application/json; charset=UTF-8")
-        val posts = GhostPosts(listOf(model))
+        val posts = GhostPosts(listOf(post))
         val entity = HttpEntity(posts, headers)
-        val url = "$apiUrl/posts/${model.id}/?include=authors,tags,authors.roles"
+        val (url, method) = if (post.id == null) {
+            Pair("$apiUrl/posts/?include=authors,tags,authors.roles", HttpMethod.POST)
+        } else {
+            Pair("$apiUrl/posts/${post.id}/?include=authors,tags,authors.roles", HttpMethod.PUT)
+        }
         handleErrors {
-            val res = restTemplate.exchange<Object>(url, HttpMethod.PUT, entity, Object::class.java)
-            if (res.statusCode != HttpStatus.OK) {
-                logger.error("Failed uploading post '${model.slug}'")
+            val res = restTemplate.exchange<Object>(url, method, entity, Object::class.java)
+            if (res.statusCode != HttpStatus.OK && res.statusCode != HttpStatus.CREATED) {
+                logger.error("Failed uploading post '${post.slug}'")
                 logger.error("Body: ${res.body}")
                 throw Exception("Failed uploading post")
             }
@@ -103,6 +107,7 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
     //   image: https://raw.githubusercontent.com/ippontech/blog-usa/master/images/2017/01/spark-logo-1.png
     //   ---
     private fun createModel(file: File): Post {
+        val slug = file.name.substringBefore(".md")
         val lines = File(file.path).readLines()
 
         var inHeader = false
@@ -110,7 +115,6 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
         var inTags = false
         var date: String? = null
         var title: String? = null
-        var id: String? = null
         var image: String? = null
         val authorNames = mutableListOf<String>()
         val tagNames = mutableListOf<String>()
@@ -136,10 +140,9 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
                 }
                 when {
                     line == "authors:" -> inAuthors = true
-                    line == "categories" -> inTags = true
+                    line == "categories:" -> inTags = true
                     line.startsWith("date:") -> date = line.substringAfter("date:").trim()
                     line.startsWith("title:") -> title = line.substringAfter("title:").trim('"', ' ')
-                    line.startsWith("id:") -> id = line.substringAfter("id:").trim()
                     line.startsWith("image:") -> image = line.substringAfter("image:").trim()
                     line.startsWith("- ") -> {
                         val value = line.substringAfter("- ")
@@ -151,9 +154,12 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
                             throw Exception("Item outside of authors or categories")
                         }
                     }
+                    line.startsWith("id:") -> if (true) {
+                    } //FIXME
+                    else -> throw Exception("Header line not recognized: '$line'")
                 }
                 if (line == "authors:") inAuthors = true
-                if (line == "categories:") inTags = true
+                if (line == "tags:") inTags = true
             } else {
                 content.add(line)
             }
@@ -167,7 +173,7 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
 
         val mobiledoc = createMobileDoc(content)
 
-        val existingPost = if (id == null) null else ghostToGit.getPost(id)
+        val existingPost = ghostToGit.findPost(slug)
 
         val featureImage = if (image != null) {
             assert(image.startsWith("https://raw.githubusercontent.com/ippontech/blog-usa/master/images/"))
@@ -189,12 +195,12 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
         }
 
         return Post(
-                id = id ?: "", //FIXME
+                id = existingPost?.id,
                 title = title,
-                slug = file.name.substringBefore(".md"),
+                slug = slug,
                 mobiledoc = mobiledoc,
                 status = if (existingPost == null) "draft" else "published",
-                created_at = date ?: "", //FIXME
+                created_at = if (date != null && date.isNotEmpty()) date else null,
                 updated_at = existingPost?.updated_at,
                 published_at = existingPost?.published_at,
                 authors = authors,
