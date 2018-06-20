@@ -57,8 +57,9 @@ class GhostExtractToGit {
     private fun generateContent(post: Post, markdown: String, userMapping: Map<String, String>): String {
         val author = userMapping[post.author]
 
-        val categories = post.tags!!.map { it.name }
-                .joinToString(prefix = "- ", separator = "\n- ")
+        val tags = post.tags!!
+                .map { "\n- ${it.name}" }
+                .joinToString(separator = "")
 
         val date = if (post.status == "published") post.published_at else ""
 
@@ -71,11 +72,9 @@ class GhostExtractToGit {
         return """---
 authors:
 - $author
-categories:
-$categories
+tags:$tags
 date: $date
 title: "$title"
-id: ${post.id}
 image: $image
 ---
 
