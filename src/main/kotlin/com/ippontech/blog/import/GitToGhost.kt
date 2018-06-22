@@ -111,9 +111,16 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
                 when {
                     line == "authors:" -> inAuthors = true
                     line == "tags:" -> inTags = true
-                    line.startsWith("date:") -> date = line.substringAfter("date:").trim()
-                    line.startsWith("title:") -> title = line.substringAfter("title:").trim('"', ' ')
-                    line.startsWith("image:") -> image = line.substringAfter("image:").trim()
+                    line.startsWith("date:") ->
+                        date = line.substringAfter("date:")
+                                .trim()
+                    line.startsWith("title:") ->
+                        title = line.substringAfter("title:")
+                                .trim('"', ' ')
+                                .replace("\\\"", "\"")
+                    line.startsWith("image:") ->
+                        image = line.substringAfter("image:")
+                                .trim()
                     line.startsWith("- ") -> {
                         val value = line.substringAfter("- ")
                         if (inAuthors) {
