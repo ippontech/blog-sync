@@ -19,7 +19,7 @@ class GhostExportService(val bearerToken: String) {
         val headers = createHeaders(bearerToken)
         headers.add("Content-Type", "application/json; charset=UTF-8")
         val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/posts/?limit=10000&status=all&formats=mobiledoc,plaintext&include=tags"
+        val url = "$apiUrl/posts/?limit=10000&status=all&formats=mobiledoc,plaintext&include=tags,authors"
         return handleErrors {
             val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
             res.body.posts
@@ -61,13 +61,13 @@ class GhostExportService(val bearerToken: String) {
         }
     }
 
-    fun getAllAuthors(): List<User> {
+    fun getAllAuthors(): List<Author> {
         logger.info("Fetching authors from Ghost")
         val headers = createHeaders(bearerToken)
         val entity = HttpEntity<String>(headers)
         val url = "$apiUrl/users/?limit=1000"
         return handleErrors {
-            val res = restTemplate.exchange<Users>(url, HttpMethod.GET, entity, Users::class.java)
+            val res = restTemplate.exchange<Authors>(url, HttpMethod.GET, entity, Authors::class.java)
             logger.info("Done fetching authors from Ghost")
             res.body.users
         }
@@ -76,11 +76,6 @@ class GhostExportService(val bearerToken: String) {
     fun getAuthorsNameToIdMap(): Map<String, String> {
         val authors = getAllAuthors()
         return authors.map { it.name to it.id }.toMap()
-    }
-
-    fun getAuthorsIdToNameMap(): Map<String, String> {
-        val authors = getAllAuthors()
-        return authors.map { it.id to it.name }.toMap()
     }
 
     fun getTags(): List<Tag> {

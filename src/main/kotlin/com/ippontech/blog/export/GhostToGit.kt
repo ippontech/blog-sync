@@ -12,10 +12,9 @@ fun main(args: Array<String>) {
 
     val ghostExportService = GhostExportService(bearerToken)
     val posts = ghostExportService.getAllPosts()
-    val authorsIdToNameMap = ghostExportService.getAuthorsIdToNameMap()
 
     val ghostToGit = GhostToGit()
-    ghostToGit.process(posts, authorsIdToNameMap, outputDir)
+    ghostToGit.process(posts, outputDir)
 }
 
 class GhostToGit {
@@ -29,19 +28,19 @@ class GhostToGit {
     private val trailingSpacesRegex = Regex("\\h+$", RegexOption.MULTILINE)
     private val extraLinesRegex = Regex("(\\n\\n)\\n+", RegexOption.MULTILINE)
 
-    fun process(posts: List<Post>, authorsIdToNameMap: Map<String, String>, outputDir: String) {
+    fun process(posts: List<Post>, outputDir: String) {
         // read the posts and write them to separate files
-        posts.forEach { writePost(outputDir, it, authorsIdToNameMap) }
+        posts.forEach { writePost(outputDir, it) }
     }
 
-    private fun writePost(outputDir: String, post: Post, authorsIdToNameMap: Map<String, String>) {
+    private fun writePost(outputDir: String, post: Post) {
         val outputFile = File("$outputDir/posts/${post.slug}.md")
         logger.info("Writing file: ${outputFile.canonicalPath}")
 
         val markdown = extractMarkdown(post)
 
         // write the file
-        val content = generateContent(post, markdown, authorsIdToNameMap)
+        val content = generateContent(post, markdown)
         outputFile.writeText(content)
 
         // write the
@@ -52,8 +51,10 @@ class GhostToGit {
                 .forEach { writeImage(outputDir, it.groups[1]!!.value) }
     }
 
-    private fun generateContent(post: Post, markdown: String, userMapping: Map<String, String>): String {
-        val author = userMapping[post.author]
+    private fun generateContent(post: Post, markdown: String): String {
+        val authors = post.authors
+                .map { "\n- ${it.name}" }
+                .joinToString(separator = "")
 
         val tags = post.tags!!
                 .map { "\n- ${it.name}" }
@@ -68,8 +69,7 @@ class GhostToGit {
         val cleanMarkdown = cleanMarkdown(markdown)
 
         return """---
-authors:
-- $author
+authors:$authors
 tags:$tags
 date: $date
 title: "$title"

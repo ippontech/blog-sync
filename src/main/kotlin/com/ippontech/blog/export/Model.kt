@@ -12,7 +12,7 @@ data class Post(
         val title: String,
         val status: String,
         val slug: String,
-        val author: String,
+        val authors: List<Author>,
         val mobiledoc: String?,
         val created_at: String,
         val updated_at: String,
@@ -32,9 +32,9 @@ data class Tag(
         val name: String)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Users(val users: List<User>)
+data class Authors(val users: List<Author>)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class User(
+data class Author(
         val id: String,
         val name: String)
