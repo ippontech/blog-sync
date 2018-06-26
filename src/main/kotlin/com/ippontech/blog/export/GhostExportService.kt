@@ -44,7 +44,7 @@ class GhostExportService(val bearerToken: String) {
         val headers = createHeaders(bearerToken)
         headers.add("Content-Type", "application/json; charset=UTF-8")
         val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/posts/slug/$slug/?status=all"
+        val url = "$apiUrl/posts/slug/$slug/?status=all&include=authors"
         try {
             val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
             if (res.body!!.posts.size != 1) {
