@@ -56,7 +56,7 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
             Pair("$apiUrl/posts/${post.id}/?include=authors,tags,authors.roles", HttpMethod.PUT)
         }
         handleErrors {
-            val res = restTemplate.exchange<Object>(url, method, entity, Object::class.java)
+            val res = restTemplate.exchange<Any>(url, method, entity, Any::class.java)
             if (res.statusCode != HttpStatus.OK && res.statusCode != HttpStatus.CREATED) {
                 logger.error("Failed uploading post '${post.slug}'")
                 logger.error("Body: ${res.body}")

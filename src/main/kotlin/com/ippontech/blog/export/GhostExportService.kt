@@ -22,7 +22,7 @@ class GhostExportService(val bearerToken: String) {
         val url = "$apiUrl/posts/?limit=10000&status=all&formats=mobiledoc,plaintext&include=tags,authors"
         return handleErrors {
             val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
-            res.body.posts
+            res.body!!.posts
         }
     }
 
@@ -33,10 +33,10 @@ class GhostExportService(val bearerToken: String) {
         val url = "$apiUrl/posts/$postId/?status=all"
         return handleErrors {
             val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
-            if (res.body.posts.size != 1) {
+            if (res.body!!.posts.size != 1) {
                 throw Exception("Post id=$postId not found, found ${res.body.posts.size} results")
             }
-            res.body.posts.first()
+            res.body!!.posts.first()
         }
     }
 
@@ -47,10 +47,10 @@ class GhostExportService(val bearerToken: String) {
         val url = "$apiUrl/posts/slug/$slug/?status=all"
         try {
             val res = restTemplate.exchange<Posts>(url, HttpMethod.GET, entity, Posts::class.java)
-            if (res.body.posts.size != 1) {
+            if (res.body!!.posts.size != 1) {
                 throw Exception("Post slug=$slug not found, found ${res.body.posts.size} results")
             }
-            return res.body.posts.first()
+            return res.body!!.posts.first()
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.NOT_FOUND) {
                 return null
@@ -69,7 +69,7 @@ class GhostExportService(val bearerToken: String) {
         return handleErrors {
             val res = restTemplate.exchange<Authors>(url, HttpMethod.GET, entity, Authors::class.java)
             logger.info("Done fetching authors from Ghost")
-            res.body.users
+            res.body!!.users
         }
     }
 
@@ -86,7 +86,7 @@ class GhostExportService(val bearerToken: String) {
         return handleErrors {
             val res = restTemplate.exchange<Tags>(url, HttpMethod.GET, entity, Tags::class.java)
             logger.info("Done fetching tags from Ghost")
-            res.body.tags
+            res.body!!.tags
         }
     }
 
