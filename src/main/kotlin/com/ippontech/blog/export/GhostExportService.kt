@@ -65,7 +65,7 @@ class GhostExportService(val bearerToken: String) {
         logger.info("Fetching authors from Ghost")
         val headers = createHeaders(bearerToken)
         val entity = HttpEntity<String>(headers)
-        val url = "$apiUrl/users/?limit=1000"
+        val url = "$apiUrl/users/?limit=all"
         return handleErrors {
             val res = restTemplate.exchange<Authors>(url, HttpMethod.GET, entity, Authors::class.java)
             logger.info("Done fetching authors from Ghost")
