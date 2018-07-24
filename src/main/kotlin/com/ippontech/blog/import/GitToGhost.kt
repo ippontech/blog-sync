@@ -2,6 +2,7 @@ package com.ippontech.blog.import
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.ippontech.blog.auth.GhostAuth
 import com.ippontech.blog.common.RestTemplateUtils.createHeaders
 import com.ippontech.blog.common.RestTemplateUtils.handleErrors
 import com.ippontech.blog.common.apiUrl
@@ -12,40 +13,22 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.RestTemplate
-import java.io.File
 
-fun main(args: Array<String>) {
-    val repositoryDir = args[0]
-    val bearerToken = args[1]
-    val gitToGhost = GitToGhost(bearerToken, repositoryDir)
+class GitToGhost {
 
-    gitToGhost.uploadAllPosts()
-
-//    listOf("plop.md")
-//            .forEach { gitToGhost.uploadPost(File("$repositoryDir/posts/$it")) }
-}
-
-class GitToGhost(val bearerToken: String, val postsDir: String) {
-
-    private val logger = LogManager.getLogger(GitToGhost::class.java)
+    private val logger = LogManager.getLogger(javaClass)
+    private val bearerToken = GhostAuth.getBearerToken()
     private val restTemplate = RestTemplate()
     private val mapper = ObjectMapper().registerModule(KotlinModule())
-    private val ghostExportService = GhostExportService(bearerToken)
+    private val ghostExportService = GhostExportService()
     private val authorsNameToIdMap = ghostExportService.getAuthorsNameToIdMap()
     private val tagsNameToIdMap = ghostExportService.getTagsNameToIdMap()
 
-    fun uploadAllPosts() {
-        File("$postsDir/posts/")
-                .listFiles()
-                .filter { it.name.endsWith(".md") }
-                .forEach { uploadPost(it) }
-    }
+    fun uploadPost(slug: String, lines: List<String>) {
+        logger.info("Uploading: ${slug}")
 
-    fun uploadPost(file: File) {
-        logger.info("Processing file: ${file.name}")
-        val post = createModel(file)
+        val post = createModel(slug, lines)
 
-        logger.info("Uploading: ${post.slug}")
         val headers = createHeaders(bearerToken)
         headers.add("Content-Type", "application/json; charset=UTF-8")
         val posts = GhostPosts(listOf(post))
@@ -76,10 +59,7 @@ class GitToGhost(val bearerToken: String, val postsDir: String) {
     //   id: 5a267e57dd54250018d6b616
     //   image: https://raw.githubusercontent.com/ippontech/blog-usa/master/images/2017/01/spark-logo-1.png
     //   ---
-    private fun createModel(file: File): Post {
-        val slug = file.name.substringBefore(".md")
-        val lines = File(file.path).readLines()
-
+    private fun createModel(slug: String, lines: List<String>): Post {
         var inHeader = false
         var inAuthors = false
         var inTags = false
