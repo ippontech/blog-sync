@@ -18,12 +18,13 @@ class RemoteGitRepoToGhost {
     private val restTemplate = RestTemplate()
     private val gitToGhost = GitToGhost()
 
-    fun uploadPost(path: String) {
+    fun uploadPost(path: String, commitId: String) {
         logger.info("Processing post: ${path}")
 
         val slug = path.substringAfter("/").substringBefore(".md")
 
-        val content = restTemplate.getForObject(URI("$baseUrl/$path"), String::class.java)
+        val url = "$baseUrl/$path?ref=$commitId"
+        val content = restTemplate.getForObject(URI(url), String::class.java)
         val lines = content.split("\n")
 
         gitToGhost.uploadPost(slug, lines)
