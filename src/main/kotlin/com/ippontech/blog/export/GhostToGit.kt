@@ -7,10 +7,9 @@ import org.apache.logging.log4j.LogManager
 import java.io.File
 
 fun main(args: Array<String>) {
-    val bearerToken = args[0]
-    val outputDir = args[1]
+    val outputDir = args[0]
 
-    val ghostExportService = GhostExportService(bearerToken)
+    val ghostExportService = GhostExportService()
     val posts = ghostExportService.getAllPosts()
 
     val ghostToGit = GhostToGit()

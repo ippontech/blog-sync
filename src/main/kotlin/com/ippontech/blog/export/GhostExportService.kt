@@ -1,5 +1,6 @@
 package com.ippontech.blog.export
 
+import com.ippontech.blog.auth.GhostAuth
 import com.ippontech.blog.common.RestTemplateUtils.createHeaders
 import com.ippontech.blog.common.RestTemplateUtils.handleErrors
 import com.ippontech.blog.common.apiUrl
@@ -10,9 +11,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 
-class GhostExportService(val bearerToken: String) {
+class GhostExportService() {
 
     private val logger = LogManager.getLogger(GhostExportService::class.java)
+    private val bearerToken = GhostAuth.getBearerToken()
     private val restTemplate = RestTemplate()
 
     fun getAllPosts(): List<Post> {
