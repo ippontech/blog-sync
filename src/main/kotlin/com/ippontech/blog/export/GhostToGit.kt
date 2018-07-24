@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 
 class GhostToGit {
 
-    private val logger = LogManager.getLogger(GhostExportService::class.java)
+    private val logger = LogManager.getLogger(javaClass)
 
     private val mapper = ObjectMapper().registerModule(KotlinModule())
 
