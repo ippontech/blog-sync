@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.50"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.51"
     }
 }
 
@@ -15,7 +15,7 @@ apply plugin: "kotlin"
 sourceCompatibility = 1.8
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.50"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.51"
     compile 'org.apache.logging.log4j:log4j-core:2.11.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4.1'
