@@ -145,11 +145,17 @@ class GitToGhost {
             Author(authorId)
         }
 
-        val tags = tagNames.map {
-            val tagId = tagsNameToIdMap[it]
-            if (tagId == null) throw Exception("Tag not found in Ghost: '$it'")
-            Tag(tagId)
-        }
+        // NOTE: this code is made to fail when a tag is listed in the post but does not exist in Ghost
+        //        val tags = tagNames.map {
+        //            val tagId = tagsNameToIdMap[it]
+        //            if (tagId == null) throw Exception("Tag not found in Ghost: '$it'")
+        //            Tag(tagId)
+        //        }
+        // NOTE: this code ignores tags that are listed in the post but that don't exist in Ghost
+        val tags = tagNames
+                .map { tagsNameToIdMap[it] }
+                .filterNotNull()
+                .map { Tag(it) }
 
         return Post(
                 id = existingPost?.id,
