@@ -12,7 +12,6 @@ import java.net.URLDecoder
 class LambdaHandler : RequestHandler<Map<String, Any>, WebhookResult> {
 
     private val logger = LogManager.getLogger(javaClass)
-    private val remoteGitRepoToGhost = RemoteGitRepoToGhost()
     private val mapper = ObjectMapper().registerModule(KotlinModule())
 
     override fun handleRequest(input: Map<String, Any>, context: Context): WebhookResult {
@@ -34,13 +33,20 @@ class LambdaHandler : RequestHandler<Map<String, Any>, WebhookResult> {
             return WebhookResult(500, "Commit info is not for the master branch")
         }
 
-        event.commits.map { processCommit(it) }
+        val pushEventHandler = PushEventHandler()
+        event.commits.map { pushEventHandler.processCommit(it) }
 
         logger.info("Done")
         return WebhookResult(200, "Success")
     }
+}
 
-    private fun processCommit(commit: Commit) {
+class PushEventHandler {
+
+    private val logger = LogManager.getLogger(javaClass)
+    private val remoteGitRepoToGhost = RemoteGitRepoToGhost()
+
+    fun processCommit(commit: Commit) {
         logger.info("Commit ID: ${commit.id}")
 
         processFiles(commit.added, commit.id)
