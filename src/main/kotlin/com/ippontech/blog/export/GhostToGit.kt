@@ -34,6 +34,10 @@ class GhostToGit {
         logger.info("Writing file: ${outputFile.canonicalPath}")
 
         val markdown = extractMarkdown(post)
+        if (markdown == null) {
+            logger.warn("Post doesn't have Markdown content - Skippoing")
+            return
+        }
 
         // write the file
         val content = generateContent(post, markdown)
@@ -76,9 +80,13 @@ $cleanMarkdown
 """
     }
 
-    private fun extractMarkdown(post: Post): String {
+    private fun extractMarkdown(post: Post): String? {
         val mobiledoc = mapper.readValue(post.mobiledoc!!, MobileDoc::class.java)
-        val markdown = mobiledoc.cards[0][1].get("markdown").textValue()!!.trim()
+        val card = mobiledoc.cards[0]
+        if (card[0].textValue() != "card-markdown") {
+            return null
+        }
+        val markdown = card[1].get("markdown").textValue()!!.trim()
         return markdown
     }
 
