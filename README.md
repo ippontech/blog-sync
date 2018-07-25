@@ -4,16 +4,20 @@ This contains code to synchronize our Ghost blog with Git.
 
 ## GitHub Webhook - Git to Ghost on updates
 
-A WebHook is defined on GitHub to upload new or updated posts to Ghost:
+A WebHook is defined on GitHub to upload new or updated posts to Ghost.
 
-* This only works on the `master` branch: anything committed to another branch will be ignored.
-* If a Pull Request is merged onto `master`, Ghost should be updated within 30 seconds.
+The webhook will only process commits made on the `master` branch: anything committed to another branch will be ignored. If a Pull Request is merged onto `master`, Ghost should be updated.
 
 This relies on some AWS infrastructure:
 
 * GitHub calls an API Gateway endpoint.
 * The API Gateway endpoint triggers a Lambda.
 * The Lambda executes `com.ippontech.blog.import.LambdaHandler`.
+
+If Ghost doesn't seem to be updated within 30 seconds after a push onto `master`:
+
+1. Check the logs of the Webhook on GitHub.
+2. Check the logs of the Lambda in CloudWatch.
 
 ## Bulk import from Git to Ghost
 
