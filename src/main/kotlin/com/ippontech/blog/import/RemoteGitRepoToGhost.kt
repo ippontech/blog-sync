@@ -8,7 +8,7 @@ import java.net.URI
 fun main(args: Array<String>) {
     val path = "posts/open-banking-open-opportunities.md"
     val localGitRepoToGhost = RemoteGitRepoToGhost()
-    localGitRepoToGhost.uploadPost(path)
+    localGitRepoToGhost.uploadPost(path, "HEAD")
 }
 
 class RemoteGitRepoToGhost {
