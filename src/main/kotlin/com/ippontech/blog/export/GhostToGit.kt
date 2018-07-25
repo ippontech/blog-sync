@@ -1,8 +1,7 @@
 package com.ippontech.blog.export
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.ippontech.blog.common.githubImageBaseUrl
+import com.ippontech.blog.common.mapper
 import org.apache.logging.log4j.LogManager
 import java.io.File
 
@@ -19,8 +18,6 @@ fun main(args: Array<String>) {
 class GhostToGit {
 
     private val logger = LogManager.getLogger(javaClass)
-
-    private val mapper = ObjectMapper().registerModule(KotlinModule())
 
     private val imageRegex = Regex("!\\[[^\\]]*\\]\\((/content/images/[^)]+)\\)")
     private val titleRegex = Regex("^(#+)([a-zA-Z])", RegexOption.MULTILINE)

@@ -2,9 +2,8 @@ package com.ippontech.blog.import
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.ippontech.blog.common.mapper
 import org.apache.logging.log4j.LogManager
 import java.net.URLDecoder
 
@@ -12,7 +11,6 @@ import java.net.URLDecoder
 class LambdaHandler : RequestHandler<Map<String, Any>, WebhookResult> {
 
     private val logger = LogManager.getLogger(javaClass)
-    private val mapper = ObjectMapper().registerModule(KotlinModule())
 
     override fun handleRequest(input: Map<String, Any>, context: Context): WebhookResult {
         logger.info("Handler called with input: $input")

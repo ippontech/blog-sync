@@ -1,12 +1,11 @@
 package com.ippontech.blog.import
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.ippontech.blog.auth.GhostAuth
 import com.ippontech.blog.common.RestTemplateUtils.createHeaders
 import com.ippontech.blog.common.RestTemplateUtils.handleErrors
 import com.ippontech.blog.common.apiUrl
 import com.ippontech.blog.common.githubImageBaseUrl
+import com.ippontech.blog.common.mapper
 import com.ippontech.blog.export.GhostExportService
 import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpEntity
@@ -19,7 +18,6 @@ class GitToGhost {
     private val logger = LogManager.getLogger(javaClass)
     private val bearerToken = GhostAuth.getBearerToken()
     private val restTemplate = RestTemplate()
-    private val mapper = ObjectMapper().registerModule(KotlinModule())
     private val ghostExportService = GhostExportService()
     private val authorsNameToIdMap = ghostExportService.getAuthorsNameToIdMap()
     private val tagsNameToIdMap = ghostExportService.getTagsNameToIdMap()
