@@ -3,6 +3,7 @@ package com.ippontech.blog.import
 import org.apache.logging.log4j.LogManager
 import org.springframework.web.client.RestTemplate
 import java.net.URI
+import java.net.URLEncoder
 
 // for tests only
 fun main(args: Array<String>) {
@@ -21,7 +22,7 @@ class RemoteGitRepoToGhost {
     fun uploadPost(path: String, commitId: String) {
         logger.info("Processing post: ${path}")
 
-        val slug = path.substringAfter("/").substringBefore(".md")
+        val slug = URLEncoder.encode( path.substringAfter("/").substringBefore(".md"), Charsets.UTF_8.name() )
 
         val url = "$baseUrl/$path?ref=$commitId"
         val content = restTemplate.getForObject(URI(url), String::class.java)
