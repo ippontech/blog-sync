@@ -34,7 +34,7 @@ class LambdaHandler : RequestHandler<Map<String, Any>, WebhookResult> {
             }
 
             val pushEventHandler = PushEventHandler()
-            event.commits.map { pushEventHandler.processCommit(it) }
+            pushEventHandler.processCommit(event.head_commit)
 
             logger.info("Done")
             return WebhookResult(200, "Success")

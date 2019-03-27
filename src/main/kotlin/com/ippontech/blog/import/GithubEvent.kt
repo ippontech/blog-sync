@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubEvent(
         val ref: String,
-        val commits: Array<Commit>
+        val head_commit: Commit
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
