@@ -39,7 +39,7 @@ class LambdaHandler : RequestHandler<Map<String, Any>, WebhookResult> {
             logger.info("Done")
             return WebhookResult(200, "Success")
         } catch (e: Exception) {
-            slackClient.sendMessage("ipponbot", "Error while syncing blog, check logs at https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logStream:group=/aws/lambda/blog-sync-prod-process")
+            slackClient.sendMessage("_us-blog", "Error while syncing blog, check logs at https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logStream:group=/aws/lambda/blog-sync-prod-process")
             throw e
         }
     }
