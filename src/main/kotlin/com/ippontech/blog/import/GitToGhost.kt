@@ -6,6 +6,7 @@ import com.ippontech.blog.common.RestTemplateUtils.handleErrors
 import com.ippontech.blog.common.apiUrl
 import com.ippontech.blog.common.githubImageBaseUrl
 import com.ippontech.blog.common.mapper
+import com.ippontech.blog.common.slackClient
 import com.ippontech.blog.export.GhostExportService
 import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpEntity
@@ -44,6 +45,7 @@ class GitToGhost {
                 throw Exception("Failed uploading post")
             }
         }
+        slackClient.sendMessage("ipponbot", "The post `${post.title}` was updated and can be published using Ghost: https://test-ippon.ghost.io/ghost/#/")
     }
 
     // EXAMPLE HEADER:
