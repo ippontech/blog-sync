@@ -140,7 +140,7 @@ class GitToGhost {
         }
 
         val authors = authorNames.map {
-            val authorId = authorsNameToIdMap[it]
+            val authorId = authorsNameToIdMap[it.toLowerCase()]
             if (authorId == null) throw Exception("Author not found in Ghost: '$it'")
             Author(authorId)
         }

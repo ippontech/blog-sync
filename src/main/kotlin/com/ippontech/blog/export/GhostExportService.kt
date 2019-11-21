@@ -77,7 +77,7 @@ class GhostExportService() {
 
     fun getAuthorsNameToIdMap(): Map<String, String> {
         val authors = getAllAuthors()
-        return authors.map { it.name to it.id }.toMap()
+        return authors.map { it.name.toLowerCase() to it.id }.toMap()
     }
 
     fun getTags(): List<Tag> {
