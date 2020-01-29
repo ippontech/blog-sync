@@ -37,6 +37,7 @@ class GitToGhost {
         } else {
             Pair("$apiUrl/posts/${post.id}/?include=authors,tags,authors.roles", HttpMethod.PUT)
         }
+        logger.info("Body: ${entity}")
         handleErrors {
             val res = restTemplate.exchange<Any>(url, method, entity, Any::class.java)
             if (res.statusCode != HttpStatus.OK && res.statusCode != HttpStatus.CREATED) {
